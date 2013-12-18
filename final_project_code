@@ -1,5 +1,4 @@
 
-
 #Hello and welcome to the PB Data set. This data looks at the Interview Parole Board Data of New York State
 #from November 2012-November 2013. This is a work in progress. Please send any questions to apw2131@columbia.edu.
 
@@ -145,84 +144,106 @@ summary(med.all$interview_type)
 #10536 were up for reappearance. 300 were going to the parole board to see if their parole should be revoked. 511 were
 #going to the parole board for special consideration (unique conditions), and 32 were going for supplementary merit. 
 
-#Now we look at the interview decision. 
+#Now we look at the interview decision:
 summary(med.all$interview_decision)
+
+#From this,we can see that 978 do not have dates yet. 18023 have been denied. 237 have been granted, 3890 not granted,
+#6096 have an open date, 9416 have had their interview date rescheuduled, 114 have been paroled, 53 have been rescinded
+#and held, 71 have been rescinded and released, and 22 have been reinstated. 
 #*  **********      DENIED     GRANTED  NOT GRANTD   OPEN DATE 
 #431         547       18023         237        3890        6096 
 #OR EARLIER     PAROLED  RCND&HOLD; RCND&RELSE;   REINSTATE 
 #9416         114          53          71          22 
 #Once again, we have the issue of duplicates. 
 
-###Min Sentence
+#Now looking at the minimum sentence, we can look at the data, but the issue is that its not a factor.
 summary(med.all$min_sentence)
-#Make as a factor:
+
+#So then we make it a factor.
 med.all$min_sentence <- as.factor(med.all$min_sentence)
+
+#But now we have the issue that the min sentence is in "Y-M" so we have to convert this to a decimal (we do this later
+#and the code for it is below.
 summary(med.all$min_sentence)
 View(med.all)
-###Max Sentence
+
+#Looking at the max sentence, we first have to turn it into a factor, but we have the same issue with format as the min
+#sentence.
 med.all$max_sentence <- as.factor(med.all$max_sentence)
 summary(med.all$max_sentence)
 
-###Facility
+#Now looking at the facility, we must first turn it into a factor and then look at the summary. 
 med.all$Facility <- as.factor(med.all$Facility)
 summary(med.all$Facility)
 
-###Crime 1
+#Same goes for the crimes (first into a factor and then look at it)
 med.all$Crime1 <- as.factor(med.all$Crime1)
 summary(med.all$Crime1)
 
-###Crime 2
+#Crime 2:
 med.all$Crime2 <- as.factor(med.all$Crime2)
 summary(med.all$Crime2)
 
-###Crime 3
+#Crime 3:
 med.all$Crime3 <- as.factor(med.all$Crime3)
 summary(med.all$Crime3)
 
-###Crime 4:
+#Crime 4:
 med.all$Crime4 <- as.factor(med.all$Crime4)
 summary(med.all$Crime4)
 
-###Age:
+#Now we can look at the age summary.
 summary(med.all$age)
-plot(med.all$age)
-cor(med.all$age, med.all$Crime1)
 
-###New stuff from Mark:
-#First need to collapse all the strings into characters, name this b.
-#Find the duplicates. The length is the same which is great.
+#And we can plot the ages
+plot(med.all$age)
+
+###New stuff from Mark to help take out the duplicates:
+
+#We first need to collapse all the strings into characters. We then name this b. Check the length. It is the same which 
+#is great.
 b = apply(med.all,1,paste,collapse=" ")
 length(b)
 
-#Find the sume of the duplicated:
+#Find the sume of the duplicated observations:
 sum(duplicated(b))
 
-#Take away the duplicated ones from b in med.all
+#Take away the duplicated observations from b in med.all:
 med.all = med.all[!duplicated(b),]
 dim(med.all)
 
-#Reorder the interview data:
+#Reorder the interview data, so you have the newest ones at the top (bc it is based on interview date):
 med.all2 = med.all[order(med.all$newintvdate),]
 
-#Check the head of the data:
+#Check the head of the data to make sure these are the most recent interview dates:
 head(med.all2)
 
-#Look at how many are duplicated using the NYSID:
+#Look at how many are duplicates using the NYSID:
 sum(duplicated(med.all2$NYSID))
 
-#Now order it based on the most recent dates:
+#Order it based on the most recent dates:
 med.all2 = med.all[order(med.all$newintvdate,decreasing=TRUE),]
 
-#Now take away all the duplicates after the first instance.
+#Take away all the duplicates after the first instance.
 med.all2 = med.all2[!duplicated(med.all2$NYSID),]
 View(med.all2)
 
-#Now look at the summaries again and see what has changed
-#First up, gender:
+#Look at the summaries again and see what has changed:
+
+#First up, let's relook at gender (because it's an easy one):
 summary(med.all2$gender)
+
+#Make a table of it:
 gend = table(med.all2$gender)
+
+#Check out the histogram
 hist(gend)
+
+#Turn on color brewer package.
+install.packages("RColorBrewer")
 require("RColorBrewer")
+
+#Create a barplot and make it look nice:
 barplot(gend,
         col = brewer.pal(3, "Set2"),
         names = c("Female",
@@ -235,12 +256,17 @@ barplot(gend,
         xlab = "Gender",
         ylab = "Number of Prisoners")
 
-#Now look up age:
+#Now let's get to age:
 summary(med.all2$age)
+
 #The min is 17 years old, the media is 41, the mean is 41.01, and the max is 90. 293 people
-#do not have their ages labeled. That is interesting.
+#do not have their ages labeled. I should look into why. 
+
+#Create a table of the data for easy plotting.
 agetab <- table(med.all2$age)
 View(agetab)
+
+#Create a beautiful barplot. 
 barplot(agetab,
         col = "steelblue",
         border = NULL,
@@ -249,8 +275,18 @@ barplot(agetab,
         xlab = "Age in years at parole board interview",
         ylim = c(0, 650)
         )
+        
+#This is really interesting because the graph is either bi or tri-modal. And one of the thickest peaks is around middle
+#age. This could be a really interesting story looking into why there is a peak here.
 
-menage <- table(med.all2$age) if (med.all2$gender = "MALE" )
+
+#Now look at just the men with their ages. 
+menage <- table(med.all2$age[med.all2$gender == "MALE"])
+summary(menage)
+barplot(menage)
+
+
+#Bar plot for all the ages:
 View(agetab)
 barplot(agetab,
         col = "steelblue",
@@ -267,6 +303,8 @@ barplot(agetab,
 summary(med.all2$race)
 #AMER IND/ALSK ASIAN/PACIFIC         BLACK      HISPANIC         OTHER       UNKNOWN         WHITE 
 #165            78          7793          3363           152           316          5641 
+#There are 165 Native American/Alaskans, 78 Asian or Pacific Islanders, 7793 Black, 3363 Hispanic, 152 Other, 316 Unknown
+#and 5641 White.
 
 #Now let's look at barplot of race
 racetab <- table(med.all2$race)
@@ -310,7 +348,9 @@ barplot(monthtab,
         ylim = c(0, 2000)
 )
 
-#Now looking at interview decision:
+#It appears that March is by far the most common month for interview. 
+
+#Now looking at interview type:
 interviewtype <- table(med.all2$interview_type)
 View(interviewtype)
 barplot(interviewtype[order(interviewtype, decreasing = T)],
@@ -339,6 +379,7 @@ med.all2$Release_Type <- as.factor(med.all2$Release_Type)
 summary(med.all2$Release_Type)
 #BOARD    CR    JS    PR 
 #9289  3944  4258     3    14 
+#
 
 #Now looking at facility:
 summary(med.all2$Facility)
@@ -353,11 +394,10 @@ barplot(facilitytab[order(facilitytab, decreasing = T)],
         ylim = c(0, 1000)
 )
 
-#Interesting that Fishkill is the most.
-
+#Interesting that Fishkill is the most when it is not the most for interview location.
 View(med.all2)
 
-#Looking at some of the crimes:
+#Looking at some of the crimes (Crime1):
 summary(med.all2$Crime1)
 crime1tab <- table(med.all2$Crime1)
 View(crime1tab)
@@ -371,8 +411,8 @@ barplot(crime1tab[order(crime1tab, decreasing = T)],
 )
 
 #A lot of crimes. Murder is the most common. 
-#Now looking at crime2
-#Looking at some of the crimes:
+
+#Now looking at crime2, which is the second conviction.
 summary(med.all2$Crime2)
 crime2tab <- table(med.all2$Crime2)
 View(crime2tab)
@@ -384,7 +424,6 @@ barplot(crime2tab[order(crime2tab, decreasing = T)],
         xlab = "Housing Location of Inmates Seeking Parole",
         ylim = c(0, 1000)
 )
-##And so forth.
 
 ##Now let's dig into the data on the lifers:
 sum(med.all2$max_expiration == "LIFE SENTENCE")
@@ -392,14 +431,21 @@ sum(med.all2$max_expiration == "LIFE SENTENCE")
 ##Create new table of just the lifers:
 lifers <- c(med.all2$max_expiration == "LIFE SENTENCE")
 
+#This I will get back to later. 
 
-###Ok some cool new stuff from Mark:
+
+
+#Some more cool new stuff from Mark:
+
+#The following code will help create the sentences into decimal.
 #Create a new variable for min_sentence
 b =  med.all2$min_sentence
 b
-#Make this variable into a character
+
+#Make this variable into a character.
 b = as.character(b)
 b
+
 #Create a decimal number of the minimum year. 
 med.all2$min_sent_yr = as.numeric(substr(b,1,2))+as.numeric(substr(b,4,5))/12
 
@@ -408,7 +454,7 @@ b =  med.all2$max_sentence
 b = as.character(b)
 med.all2$max_sent_yr = as.numeric(substr(b,1,2))+as.numeric(substr(b,4,5))/12
 
-#Now what to do about the "LIFE" sentences:
+#Now what to do about the "LIFE" sentences because they are not a number. Let's make them Inf:
 b[is.na(med.all2$max_sent_yr)]
 med.all2$max_sent_yr[is.na(med.all2$max_sent_yr)]= Inf
 View(med.all2)
