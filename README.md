@@ -32,5 +32,7 @@ Also when looking at the data for who was getting parole and who wasn't, it appe
 Further Questions
 ------
 ####Proportions per crime and race
+I need to look at proportions, not total numbers. This will give a more accurate picture of which race is getting parole per crime the most, or if they are all equal per crime (which is our null hypothesis). For this I need to create several new data sets looking at each crime and then looking closely at the racial proportion per crime. 
 
 ####Correlations and Regressions
+
