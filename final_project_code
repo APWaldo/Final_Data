@@ -1,0 +1,604 @@
+
+#Rename data sets:
+conviction <- parole
+
+#Load in board data:
+board <- read.csv("parole.csv")
+View(board)
+View(conviction)
+
+#Merge the two datasets by NYSID number, make a master data set, and then slim down.
+all <- merge(board, conviction, by="NYSID")
+View(all)
+
+#Take out some of the redundant rows.
+med.all <- all[,c(1, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36) ]
+View(med.all)
+
+####Renaming variables to make them more manageable. 
+#Renaming SEX:
+names(med.all)[2] <- "gender"
+View(med.all)
+#Renaming BIRTH.DATE:
+names(med.all)[3] <- "birthdate"
+View(med.all)
+#Remaning RACE...ETHINICITY:
+names(med.all)[4] <- "race"
+View(med.all)
+#Renaming HOUSING.OR.INTERVIEW.FACILI:
+names(med.all)[5] <- "interview_loc"
+View(med.all)
+#Renaming PAROLE BOARD INTERVIEW DATE:
+names(med.all)[6] <- "interview_date"
+View(med.all)
+#Renaming PAROLE BOARD INTERVIEW TYPE:
+names(med.all)[7] <- "interview_type"
+View(med.all)
+#Renaming PAROLE BOARD INTERVIEW TYPE:
+names(med.all)[8] <- "interview_decision"
+View(med.all)
+#Renaming AGGREGATED MIN SENTENCE:
+names(med.all)[11] <- "min_sentence"
+View(med.all)
+#Renaming AGGREGATED MAX SENTENCE:
+names(med.all)[12] <- "max_sentence"
+View(med.all)
+#Renaming Parole Eligibility Date:
+names(med.all)[16] <- "prl_elig_date"
+View(med.all)
+#Renaming Conditional Release Date:
+names(med.all)[17] <- "cond_rls_date"
+View(med.all)
+#Renaming Maximum Expiration Date:
+names(med.all)[18] <- "max_expiration"
+View(med.all)
+
+
+####Start looking at some of the descriptors of the text:
+
+#Gender
+summary(med.all$gender)
+#Results: FEMALE 2462   MALE 36352  UNK  86 
+#Mainly men in the data set, and 86 unknown values, should figure out what these mean. 
+#Issue that has come up, there are many many duplicates, need to figure out how to take them out.
+
+##Birthdate/Age
+summary(med.all$birthdate)
+#Now, I need to get age, which will be more useful for looking at the data.
+#First, convert the birthdate to R format:
+med.all$newbdate <- as.Date(med.all$birthdate, "%m/%d/%Y")
+#Convert interview date to format:
+med.all$newintvdate <- as.Date(med.all$interview_date, "%m/%d/%Y")
+View(med.all)
+#Now try to get age
+age_years <- function(med.all$newbdate, med.all$newintvdate) 
+{ 
+  lt <- data.frame(med.all$newbdate, med.all$newintvdate) 
+  age <- as.numeric(format(lt[,2],format="%Y")) - as.numeric(format(lt[,1],format="%Y")) 
+  first <- as.Date(paste(format(lt[,2],format="%Y"),"-",format(lt[,1],format="%m-%d"),sep="")) 
+  age[which(med.all$newbdate > lt[,2])] <- age[which(med.all$newbdate > lt[,2])] - 1 
+  age 
+}
+View(age)
+
+#add the age on:
+med.all$age <- age
+View(med.all)
+#yay!
+
+###Race
+summary(med.all$race)
+#AMER IND/ALSK ASIAN/PACIFIC         BLACK      HISPANIC         OTHER 
+#398           282         16859          7606           389 
+#UNKNOWN         WHITE 
+#781         12585 
+
+###Interview location:
+summary(med.all$interview_loc)
+
+###New Interview Date:
+summary(med.all$newintvdate)
+
+###Interview type
+summary(med.all$interview_type)
+#DEPORT      ECPDO    INITIAL    MEDICAL MERIT TIME        PIE   PV REAPP 
+#3        224      19190         34       6097       1533        440 
+#REAPPEAR RESCISSION  SP CONSDR SUPP MERIT 
+#10536        300        511         32 
+
+###Interview decision:
+summary(med.all$interview_decision)
+#*  **********      DENIED     GRANTED  NOT GRANTD   OPEN DATE 
+#431         547       18023         237        3890        6096 
+#OR EARLIER     PAROLED  RCND&HOLD; RCND&RELSE;   REINSTATE 
+#9416         114          53          71          22 
+
+###Min Sentence
+summary(med.all$min_sentence)
+#Make as a factor:
+med.all$min_sentence <- as.factor(med.all$min_sentence)
+summary(med.all$min_sentence)
+View(med.all)
+###Max Sentence
+med.all$max_sentence <- as.factor(med.all$max_sentence)
+summary(med.all$max_sentence)
+
+###Facility
+med.all$Facility <- as.factor(med.all$Facility)
+summary(med.all$Facility)
+
+###Crime 1
+med.all$Crime1 <- as.factor(med.all$Crime1)
+summary(med.all$Crime1)
+
+###Crime 2
+med.all$Crime2 <- as.factor(med.all$Crime2)
+summary(med.all$Crime2)
+
+###Crime 3
+med.all$Crime3 <- as.factor(med.all$Crime3)
+summary(med.all$Crime3)
+
+###Crime 4:
+med.all$Crime4 <- as.factor(med.all$Crime4)
+summary(med.all$Crime4)
+
+###Age:
+summary(med.all$age)
+plot(med.all$age)
+cor(med.all$age, med.all$Crime1)
+
+###New stuff from Mark:
+#First need to collapse all the strings into characters, name this b.
+#Find the duplicates. The length is the same which is great.
+b = apply(med.all,1,paste,collapse=" ")
+length(b)
+
+#Find the sume of the duplicated:
+sum(duplicated(b))
+
+#Take away the duplicated ones from b in med.all
+med.all = med.all[!duplicated(b),]
+dim(med.all)
+
+#Reorder the interview data:
+med.all2 = med.all[order(med.all$newintvdate),]
+
+#Check the head of the data:
+head(med.all2)
+
+#Look at how many are duplicated using the NYSID:
+sum(duplicated(med.all2$NYSID))
+
+#Now order it based on the most recent dates:
+med.all2 = med.all[order(med.all$newintvdate,decreasing=TRUE),]
+
+#Now take away all the duplicates after the first instance.
+med.all2 = med.all2[!duplicated(med.all2$NYSID),]
+View(med.all2)
+
+#Now look at the summaries again and see what has changed
+#First up, gender:
+summary(med.all2$gender)
+gend = table(med.all2$gender)
+hist(gend)
+require("RColorBrewer")
+barplot(gend,
+        col = brewer.pal(3, "Set2"),
+        names = c("Female",
+                  "Male",
+                  "Unknown"),
+        boxwex = 0.5, #width of box
+        whisklty = 1, #whisker line type is 1 = solid line
+        staplelty = 0, #staple type, 0 = none
+        main = "Parole Interviews 2012-2013: Gender",
+        xlab = "Gender",
+        ylab = "Number of Prisoners")
+
+#Now look up age:
+summary(med.all2$age)
+#The min is 17 years old, the media is 41, the mean is 41.01, and the max is 90. 293 people
+#do not have their ages labeled. That is interesting.
+agetab <- table(med.all2$age)
+View(agetab)
+barplot(agetab,
+        col = "steelblue",
+        border = NULL,
+        main = "Parole Board Interviews 2012-2013: Frequency of Age",
+        ylab = "Frequency",
+        xlab = "Age in years at parole board interview",
+        ylim = c(0, 650)
+        )
+
+menage <- table(med.all2$age) if (med.all2$gender = "MALE" )
+View(agetab)
+barplot(agetab,
+        col = "steelblue",
+        border = NULL,
+        main = "Parole Board Interviews 2012-2013: Frequency of Age",
+        ylab = "Frequency",
+        xlab = "Age in years at parole board interview",
+        ylim = c(0, 650)
+)
+
+#So interesting because of the peak in middle age.
+
+#Now let's look at race:
+summary(med.all2$race)
+#AMER IND/ALSK ASIAN/PACIFIC         BLACK      HISPANIC         OTHER       UNKNOWN         WHITE 
+#165            78          7793          3363           152           316          5641 
+
+#Now let's look at barplot of race
+racetab <- table(med.all2$race)
+View(racetab)
+barplot(racetab,
+        col = "steelblue",
+        border = NULL,
+        main = "Parole Board Interviews 2012-2013: Frequency of Race",
+        ylab = "Frequency",
+        xlab = "Race of parole interviewee",
+       ylim = c(0, 8000)
+)
+
+#Now let's look at interview loc:
+intvtab <- table(med.all2$interview_loc)
+View(intvtab)
+barplot(intvtab[order(intvtab, decreasing = T)],
+        col = "steelblue",
+        border = NULL,
+        main = "Parole Board Interviews 2012-2013: Frequency of Interview Location",
+        ylab = "Frequency",
+        xlab = "Interview location of parole interviewee",
+        ylim = c(0, 1000)
+)
+
+#Now let's look at the interview date and see if there is a time in the month that is most popular:
+x = med.all2$interview_date
+month = gsub("(.*)/(.*)/(.*)", "\\1", x)
+View(month)
+med.all2$month <- month
+View(med.all2)
+med.all2$month <- as.numeric(med.all2$month)
+monthtab = table(med.all2$month)
+View(monthtab)
+barplot(monthtab,
+        col = "steelblue",
+        border = NULL,
+        main = "Parole Board Interviews 2012-2013: Frequency of Interview Month",
+        ylab = "Frequency",
+        xlab = "Interview month for parole board",
+        ylim = c(0, 2000)
+)
+
+#Now looking at interview decision:
+interviewtype <- table(med.all2$interview_type)
+View(interviewtype)
+barplot(interviewtype[order(interviewtype, decreasing = T)],
+        col = "steelblue",
+        border = NULL,
+        main = "Parole Board Interviews 2012-2013: Frequency of Interview Type",
+        ylab = "Frequency",
+        xlab = "Interview type of parole interviewee",
+        ylim = c(1, 10000)
+)
+
+#Now looking at interview decision:
+interviewdec <- table(med.all2$interview_decision)
+View(interviewdec)
+barplot(interviewdec[order(interviewdec, decreasing = T)],
+        col = "steelblue",
+        border = NULL,
+        main = "Parole Board Interviews 2012-2013: Frequency of Interview Decision",
+        ylab = "Frequency",
+        xlab = "Interview type of parole decision",
+        ylim = c(1,13500)
+)
+
+#Now looking at release type:
+med.all2$Release_Type <- as.factor(med.all2$Release_Type)
+summary(med.all2$Release_Type)
+#BOARD    CR    JS    PR 
+#9289  3944  4258     3    14 
+
+#Now looking at facility:
+summary(med.all2$Facility)
+facilitytab <- table(med.all2$Facility)
+View(facilitytab)
+barplot(facilitytab[order(facilitytab, decreasing = T)],
+        col = "steelblue",
+        border = NULL,
+        main = "Parole Board Interviews 2012-2013: Location of Inmates",
+        ylab = "Frequency",
+        xlab = "Housing Location of Inmates Seeking Parole",
+        ylim = c(0, 1000)
+)
+
+#Interesting that Fishkill is the most.
+
+View(med.all2)
+
+#Looking at some of the crimes:
+summary(med.all2$Crime1)
+crime1tab <- table(med.all2$Crime1)
+View(crime1tab)
+barplot(crime1tab[order(crime1tab, decreasing = T)],
+        col = "steelblue",
+        border = NULL,
+        main = "Parole Board Interviews 2012-2013: Location of Inmates",
+        ylab = "Frequency",
+        xlab = "Housing Location of Inmates Seeking Parole",
+        ylim = c(0, 2250)
+)
+
+#A lot of crimes. Murder is the most common. 
+#Now looking at crime2
+#Looking at some of the crimes:
+summary(med.all2$Crime2)
+crime2tab <- table(med.all2$Crime2)
+View(crime2tab)
+barplot(crime2tab[order(crime2tab, decreasing = T)],
+        col = "steelblue",
+        border = NULL,
+        main = "Parole Board Interviews 2012-2013: Location of Inmates",
+        ylab = "Frequency",
+        xlab = "Housing Location of Inmates Seeking Parole",
+        ylim = c(0, 1000)
+)
+##And so forth.
+
+##Now let's dig into the data on the lifers:
+sum(med.all2$max_expiration == "LIFE SENTENCE")
+#Total are 3325.
+##Create new table of just the lifers:
+lifers <- c(med.all2$max_expiration == "LIFE SENTENCE")
+
+
+###Ok some cool new stuff from Mark:
+#Create a new variable for min_sentence
+b =  med.all2$min_sentence
+b
+#Make this variable into a character
+b = as.character(b)
+b
+#Create a decimal number of the minimum year. 
+med.all2$min_sent_yr = as.numeric(substr(b,1,2))+as.numeric(substr(b,4,5))/12
+
+#Now do the same for maximum sentence (to make into a decimal):
+b =  med.all2$max_sentence
+b = as.character(b)
+med.all2$max_sent_yr = as.numeric(substr(b,1,2))+as.numeric(substr(b,4,5))/12
+
+#Now what to do about the "LIFE" sentences:
+b[is.na(med.all2$max_sent_yr)]
+med.all2$max_sent_yr[is.na(med.all2$max_sent_yr)]= Inf
+View(med.all2)
+
+#Only issue is when I take the mean of the max sentence, it will be Inf because
+#of the life sentences.
+mean(med.all2$max_sent_yr)
+
+#One way to solve this is by saying bring me back all but Inf for the mean.
+mean(med.all2$max_sent_yr[med.all2$max_sent_yr!=Inf])
+
+#Now this shows a box plot that shows age and crime1 together, but way too much data.
+boxplot(split(med.all2$age,med.all2$Crime1))
+
+#This assigns it to bys so we can look at it as a table and sort crimes per age.
+bys = split(med.all2$age,med.all2$Crime1)
+
+#Check out the head of the data table.
+head(bys)
+
+#Look at the length (or number of frequencies) of all the variables in bys
+sapply(bys,length)
+
+#Now sort the data as seen above.
+sort(sapply(bys,length))
+
+#Now only take crimes that have over 200 people committing them as crime1.
+bys2 = bys[sapply(bys,length)>200]
+
+#Check out the boxplot
+boxplot(bys2)
+
+#Add names to the boxplot.
+boxplot(bys2,las=2)
+
+#Make the names smaller:
+boxplot(bys2,las=2,cex.axis=0.5)
+
+#Now order the data and look at the median ages across (with outliers of course):
+bys2 = bys2[order(sapply(bys2,median,na.rm=TRUE))]
+boxplot(bys2,las=2,cex.axis=0.5,horizontal=TRUE)
+
+#Now look at race and crime1
+b = table(med.all2$Crime1,med.all2$race)
+b
+#Look at sums of race and crime.
+apply(b,2,sum)
+apply(b,1,sum)
+
+#Look at the dimensions of the mosiac plot (22 crimes, 7 races)
+dim(b)
+
+#Only look at crimes with over 200 people:
+b = b[apply(b,1,sum)>200,]
+
+#Make a mosiac plot:
+mosaicplot(b)
+
+#Turn the text vertical
+mosaicplot(b,las=2)
+
+#Load colorbrewer package:
+library(RColorBrewer)
+require("RColorBrewer")
+
+#Use color "Blues":
+cc = brewer.pal(7,"Blues")
+
+#Make a mosaic plot:
+mosaicplot(b,las=2,col=cc)
+
+#Change the color to something more contrasting:
+cc = brewer.pal(7,"Set1")
+mosaicplot(b,las=2,col=cc)
+b
+
+#Combine the race groups that are less than 10%. 
+b2 = b
+apply(b[,-c(3,4,7)],2,sum)
+b2 = cbind(b[,3:4],b[,7],apply(b[,-c(3,4,7)],1,sum))
+cc = brewer.pal(4,"Set1")
+
+#Amazing mosaic plot:
+mosaicplot(b2,las=2,col=cc)
+
+#Now let's create a new table, only looking at the parole grantees and denied (taking
+#away the ones with their dates rescheduled)
+
+#Summary of interview decision:
+summary(med.all2$interview_decision)
+
+#From this we can see that 269 have not happened yet, 11803 were denied, 181 were granted
+#parole, 589 were not granted. 3987 have an open date. 554 have Or Earlier. 86 were paroled.
+#5 were RCND&HOLD, 25 were RCND&RELSE, and 8 were REINSTATE.
+
+#Some help with the data (https://www.parole.ny.gov/calendardatadefinitions.html)
+#RCND&RELSE: RESCIND ORIGINAL RELEASE DATE/NEW DATE -- this means that the board says ok
+#and then new information comes in before your release that nullifies your parole. This is
+#in fact a denial. 
+#REINSTATE: REINSTATE ORIGINAL RELEASE DATE -- this is when parole was granted, rescinded, 
+#and then granted again. These inmates are free to go.
+#RCND&HOLD: RESCIND ORIGINAL RELEASE DATE & HOLD -- this means that the board says ok
+#and then new information comes in before your release that nullifies your parole. This is
+#in fact a denial. In this case, there will likely be a trial, and then it will be decided
+#on again.
+#GRANTED: CPDO GRANTED (or merit time?) -- this should be double checked, but this is conditional parole for
+#deportation only. These individuals are immigrants in the prison system who will be deported
+#back to their countries. But this category could also mean that the person has been let out
+#on merit time, meaning they had an indeterminate sentence with a minimum of six years, the Merit Time 
+#allowance would equal one year. This does not qualify for A-1 felons (other than A-1 drug offense),
+#A Penal Law sec. 70.02 violent felony offense; Manslaughter 2nd degree; Vehicular 
+#manslaughter 1st degree; Criminally negligent homicide; Penal Law Articles 130 and 263 
+#offenses; or Incest. Also the inmate must also have successfully participated in a work 
+#or treatment program assigned pursuant to Correction Law and have accomplished one of 
+#the following: Earned a GED; Acquired an ASAT Certificate; Earned a Vocational Trade 
+#Certificate after six months of vocational programming; or Performed 400 hours of 
+#community service on a work crew.
+#NOT GRANTED: CPDO/MERIT TIME NOT GRANTED: not out on merit time, this is counted as DENIAL.
+#PAROLED: PAROLED - STRAIGHT DATE: This means that you are paroled, and you already have
+#approved residence and employment prior to the parole board interview.
+#OPEN DT: PAROLED - OPEN DATE - open date case, the responsibility for finding a job, 
+#a place to live, and other elements of the parole program are shared by the inmate and 
+#the designated Parole field office to which the inmate will be released. The inmate will 
+#reappear before the Parole Board if you have not developed an approved parole 
+#plan in the community within six months of being granted an open date status.
+#OR EARLIER: OR EARLIER/POSTPONEMENT: postponed, treating this as not granted parole.
+#DENIED: DENIED -- obvious.
+
+p1 <- med.all2[med.all2$interview_decision == "OPEN DATE",]
+p2 <- med.all2[med.all2$interview_decision == "PAROLED",]
+p <- rbind(p1, p2)
+View(p)
+summary(p$interview_decision)
+np <- med.all2[med.all2$interview_decision !="PAROLED" & med.all2$interview_decision !="OPEN DATE",]
+summary(np$interview_decision)
+dim(p)
+dim(np)
+
+#Now I have a data frame of all the paroled individuals (p) and the 
+#nonparoled individuals (np).
+
+#Let's look at some of the breakdown.....
+
+#First up, age.
+
+par_age = table(p$age)
+barplot(par_age)
+npar_age = table(np$age)
+barplot(npar_age)
+
+#Now let's look at race.
+par_race = table(p$race)
+barplot(par_race)
+npar_race = table(np$race)
+barplot(npar_race)
+
+#Now let's look at crime.
+par_crime1 = table(p$Crime1)
+View(par_crime1)
+cp = brewer.pal(9,"Blues")
+barplot(sort(par_crime1[par_crime1>100]),
+        col = cp,
+        las=2,
+        ylim = c(0, 600),
+        cex.axis=0.8,
+        cex.names=0.5)
+#        horiz=TRUE)
+?barplot
+npar_crime1 = table(np$Crime1)
+cp = brewer.pal(9,"Blues")
+barplot(sort(npar_crime1[npar_crime1>300]),
+        col = cp,
+        las=2,
+        ylim = c(0, 1600),
+        cex.axis=0.8,
+        cex.names=0.5)
+
+#Now lets look at race and crime1 with parole and not parole:
+race_crime_parole = table(p$Crime1,p$race)
+race_crime_parole = race_crime_parole[apply(race_crime_parole,1,sum)>100,]
+mosaicplot(race_crime_parole)
+#Turn the text vertical
+mosaicplot(race_crime_parole,las=2)
+
+#Use color "Blues":
+cc = brewer.pal(7,"Blues")
+
+#Make a mosaic plot:
+mosaicplot(race_crime_parole,las=2,col=cc)
+
+#Combine the race groups that are less than 10%. 
+race_crime_parole2 = race_crime_parole
+View(race_crime_parole2)
+apply(race_crime_parole[,-c(3,4,7)],2,sum)
+race_crime_parole2 = cbind(race_crime_parole[,3:4],race_crime_parole[,7],apply(race_crime_parole[,-c(3,4,7)],1,sum))
+View(race_crime_parole2)
+colnames(race_crime_parole2)[3] <- "WHITE"
+colnames(race_crime_parole2)[4] <- "OTHER"
+cc = brewer.pal(4,"Blues")
+
+#Amazing mosaic plot:
+mosaicplot(race_crime_parole2,las=2,col=cc)
+
+#Now lets look at race and crime1 with not parole:
+race_crime_notparole = table(np$Crime1,np$race)
+race_crime_notparole = race_crime_notparole[apply(race_crime_notparole,1,sum)>300,]
+mosaicplot(race_crime_notparole)
+#Turn the text vertical
+mosaicplot(race_crime_notparole,las=2)
+
+#Use color "Blues":
+cc = brewer.pal(9,"Blues")
+
+#Make a mosaic plot:
+mosaicplot(race_crime_notparole,las=2,col=cc)
+
+#Combine the race groups that are less than 10%. 
+race_crime_notparole2 = race_crime_notparole
+View(race_crime_notparole2)
+apply(race_crime_notparole[,-c(3,4,7)],2,sum)
+race_crime_notparole2 = cbind(race_crime_notparole[,3:4],race_crime_notparole[,7],apply(race_crime_notparole[,-c(3,4,7)],1,sum))
+View(race_crime_notparole2)
+colnames(race_crime_notparole2)[3] <- "WHITE"
+colnames(race_crime_notparole2)[4] <- "OTHER"
+cc = brewer.pal(4,"Blues")
+
+#Amazing mosaic plot:
+mosaicplot(race_crime_notparole2,las=2,col=cc)
+?prop.table
+
+#Now comes the issue that these are not a percentage of the whole. This must be done for
+#further clarity. And then also I have to look at the specific crimes and see if for each crime
+#whose percentage of the whole pop is getting parole more.
