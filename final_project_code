@@ -1,76 +1,108 @@
 
-#Rename data sets:
+
+#Hello and welcome to the PB Data set. This data looks at the Interview Parole Board Data of New York State
+#from November 2012-November 2013. This is a work in progress. Please send any questions to apw2131@columbia.edu.
+
+
+#First things first, let's name the first set of data to conviction (this is all the conviction/sentencing
+#information for people going to the parole board in New York State.
 conviction <- parole
 
-#Load in board data:
+#Load in the interview parole board data:
 board <- read.csv("parole.csv")
+
+#Check out the data to get a sense of what it looks like:
 View(board)
 View(conviction)
 
-#Merge the two datasets by NYSID number, make a master data set, and then slim down.
+#Merge the two datasets by NYSID number and create a master data set:
 all <- merge(board, conviction, by="NYSID")
+
+#Check out the new data set:
 View(all)
 
-#Take out some of the redundant rows.
-med.all <- all[,c(1, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36) ]
+#Take out some of the redundant rows and rename to med.all for medium data set:
+med.all <- all[,c(1, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 
+23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36) ]
+
+Check out the downsized data set:
 View(med.all)
 
-####Renaming variables to make them more manageable. 
-#Renaming SEX:
+#Now, let's rename some of the variables to make them easier to manage and understand:
+
+#Rename SEX to gender:
 names(med.all)[2] <- "gender"
 View(med.all)
-#Renaming BIRTH.DATE:
+
+#Rename BIRTH.DATE to birthdate:
 names(med.all)[3] <- "birthdate"
 View(med.all)
-#Remaning RACE...ETHINICITY:
+
+#Remane RACE...ETHINICITY to race:
 names(med.all)[4] <- "race"
 View(med.all)
-#Renaming HOUSING.OR.INTERVIEW.FACILI:
+
+#Rename HOUSING.OR.INTERVIEW.FACILITY to interview_loc:
 names(med.all)[5] <- "interview_loc"
 View(med.all)
-#Renaming PAROLE BOARD INTERVIEW DATE:
+
+#Rename PAROLE BOARD INTERVIEW DATE to interview_date:
 names(med.all)[6] <- "interview_date"
 View(med.all)
-#Renaming PAROLE BOARD INTERVIEW TYPE:
+
+#Rename PAROLE BOARD INTERVIEW TYPE to interview_type:
 names(med.all)[7] <- "interview_type"
 View(med.all)
-#Renaming PAROLE BOARD INTERVIEW TYPE:
+
+#Rename PAROLE BOARD INTERVIEW TYPE to interview_decision:
 names(med.all)[8] <- "interview_decision"
 View(med.all)
-#Renaming AGGREGATED MIN SENTENCE:
+
+#Rename AGGREGATED MIN SENTENCE to min_sentence:
 names(med.all)[11] <- "min_sentence"
 View(med.all)
-#Renaming AGGREGATED MAX SENTENCE:
+
+#Rename AGGREGATED MAX SENTENCE to max_sentence:
 names(med.all)[12] <- "max_sentence"
 View(med.all)
-#Renaming Parole Eligibility Date:
+
+#Rename Parole Eligibility Date to prl_elig_date:
 names(med.all)[16] <- "prl_elig_date"
 View(med.all)
-#Renaming Conditional Release Date:
+
+#Rename Conditional Release Date to cond_rls_date:
 names(med.all)[17] <- "cond_rls_date"
 View(med.all)
-#Renaming Maximum Expiration Date:
+
+#Rename Maximum Expiration Date to max_expiration:
 names(med.all)[18] <- "max_expiration"
 View(med.all)
 
+###Now once the tables are cleaned up a bit, let's start looking at some of the descriptors of the text:
 
-####Start looking at some of the descriptors of the text:
-
-#Gender
+#First, let's look at a summary of gender:
 summary(med.all$gender)
-#Results: FEMALE 2462   MALE 36352  UNK  86 
-#Mainly men in the data set, and 86 unknown values, should figure out what these mean. 
-#Issue that has come up, there are many many duplicates, need to figure out how to take them out.
 
-##Birthdate/Age
+#Thew results reveal that there are 2462 female observations and 36352 male observations, and 86 unknown observations.
+#It would be good to look at the 86 unknown observations and see why they are listed as unknown (I should make sure 
+#this is not an error on my part). But what this also reveals is that I have a very credible issue. There are many 
+#duplicates in my data set because a person may have an interview date moved several times, or have it rescinded and then
+#reinstated, etc. There are many reasons. What I would like to have is the most recent time they went to the parole board.
+#My data set will reflect this later on. 
+
+#Next let's look at birthdate:
 summary(med.all$birthdate)
-#Now, I need to get age, which will be more useful for looking at the data.
-#First, convert the birthdate to R format:
+
+#The results reveal many dates, but do not show the age in years, which I need. In order to get the age, first, I have
+#to convert the birthdate to R format:
 med.all$newbdate <- as.Date(med.all$birthdate, "%m/%d/%Y")
-#Convert interview date to format:
+
+#Because I want to tell how old they were at their interview date, then I convert the interview date to the R format.
 med.all$newintvdate <- as.Date(med.all$interview_date, "%m/%d/%Y")
 View(med.all)
-#Now try to get age
+
+#Now in order to get age, I should use this function that will take the birthday an the interview date, and find the
+#number of years in between. 
 age_years <- function(med.all$newbdate, med.all$newintvdate) 
 { 
   lt <- data.frame(med.all$newbdate, med.all$newintvdate) 
@@ -79,39 +111,47 @@ age_years <- function(med.all$newbdate, med.all$newintvdate)
   age[which(med.all$newbdate > lt[,2])] <- age[which(med.all$newbdate > lt[,2])] - 1 
   age 
 }
+
+#Now we will see that age holds all of the ages of those in our data set. Yay!
 View(age)
 
-#add the age on:
+#We now add age to our main data set as a new column called age. 
 med.all$age <- age
 View(med.all)
-#yay!
 
-###Race
+#Now, let's take a look at race and how it relates to the rest of our data:
 summary(med.all$race)
-#AMER IND/ALSK ASIAN/PACIFIC         BLACK      HISPANIC         OTHER 
-#398           282         16859          7606           389 
-#UNKNOWN         WHITE 
-#781         12585 
+#There are 398 Native American/Alaskan, 282 Asian/Pacific Islander, 16859 Black, 7606 Hispanic, 389 Other, 781 Unknown, 
+#and 12585 White. However, we still have that annoying issue of duplicates.
 
-###Interview location:
+#Now, let's look at the summary of interview location. This is interesting because it does not match up to facility
+#(shown later on):
 summary(med.all$interview_loc)
 
-###New Interview Date:
+#Let's now look at the new interview date and see what it shows.
 summary(med.all$newintvdate)
 
-###Interview type
+#Now let's take a look at the interview type. 
 summary(med.all$interview_type)
+
+#This is the table that came up:
 #DEPORT      ECPDO    INITIAL    MEDICAL MERIT TIME        PIE   PV REAPP 
 #3        224      19190         34       6097       1533        440 
 #REAPPEAR RESCISSION  SP CONSDR SUPP MERIT 
 #10536        300        511         32 
+#What this means is that 3 were facing deportation, 224 were facing early conditional parole to deportation only,
+#19190 were facing their first parole interview, 34 were up for medical parole (because they are very very sick), 6097
+#were eligible for merit time (or getting out early, conditions apply, see below). Not sure what PIE and PV REAPP mean.
+#10536 were up for reappearance. 300 were going to the parole board to see if their parole should be revoked. 511 were
+#going to the parole board for special consideration (unique conditions), and 32 were going for supplementary merit. 
 
-###Interview decision:
+#Now we look at the interview decision. 
 summary(med.all$interview_decision)
 #*  **********      DENIED     GRANTED  NOT GRANTD   OPEN DATE 
 #431         547       18023         237        3890        6096 
 #OR EARLIER     PAROLED  RCND&HOLD; RCND&RELSE;   REINSTATE 
 #9416         114          53          71          22 
+#Once again, we have the issue of duplicates. 
 
 ###Min Sentence
 summary(med.all$min_sentence)
