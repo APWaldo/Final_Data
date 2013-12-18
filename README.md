@@ -17,13 +17,17 @@ With initial analysis, it was necessary to look at a summary of each variable. I
 
 Additionally, with the variable fields with dates, I had to go through and make sure that they were in R format. I alos realized that the birthdate column made it difficult to see what the true age of the person was, so I created a new column to look solely at the age of the inmate at the  time of the parole board interview. 
 
+Also, I was able to look at crime and race up against each other, comparing the two in a mosaic plot. And then after I completed several comparisons, I was able to look at and compare race and crime and who was getting parole. Very interesting data.
+
 Findings
 ------
 ####Age
-The first interesting point came from the data on age of all the individuals coming to the parole bard. 
+The first interesting point came from the data on age of all the individuals coming to the parole board. The data appears to be bo or tri-modal, peaking around middle age (47-53). This could be a group of people with 20-25 years to LIFE sentences who are all hitting the parole baord at the same time. This could also be related to the kind of sentencing 20-25 years ago. This is worth exploring and looking more into.
 
 ####Race and Crime
+What was so interesting about my initial mosaic plots was that most white people are going to the parole board for burglary in the second degree, whereas most black people are going to the parole board for robbery in the second degree. The difference between the two crimes is generally whether force was applied. Robbery means literal taking, whereas burglary generally means the victim is not around for the theft (houses, stores, etc.). 
 
+Also when looking at the data for who was getting parole and who wasn't, it appears that in all cases but murder, white people are getting out on parole more than any other race. Looking at who is not getting out on parole, the majority of the inmates are black, and then other races. But this led me to a large analytical problem and error--I need to know exactly what proportion they are of the total population so I can compare like numbers (see further questions). 
 
 Further Questions
 ------
