@@ -35,4 +35,4 @@ Further Questions
 I need to look at proportions, not total numbers. This will give a more accurate picture of which race is getting parole per crime the most, or if they are all equal per crime (which is our null hypothesis). For this I need to create several new data sets looking at each crime and then looking closely at the racial proportion per crime. 
 
 ####Correlations and Regressions
-
+I would like to start seeing which variables have the strongest relationships with each other. But this will only come once I create a new column for proportional population. 
